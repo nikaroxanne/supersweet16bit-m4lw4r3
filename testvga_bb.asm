@@ -41,8 +41,8 @@ crash_n:
 	add	ax,di
 	mov	es:[di],al
 	inc	cx
-	cmp	cx,0255h
-	jge 	short crash
+	cmp	cx,65556h
+	jl 	short crash
 	ret
 
 	
