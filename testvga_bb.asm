@@ -12,17 +12,10 @@
 ;
 ;******************************************************************************
 
-
 .CODE
-
 	org 100h
 
 _start	PROC	NEAR
-	;;mov	ah,40h
-	;;mov	bx,1
-	;;stdout == 1
-	;;mov	dx,offset a$msg
-	;;int	21h
 
 	mov	ax,0B800h
 	mov	es,ax
@@ -56,6 +49,7 @@ crash_n:
 ;	Else, continue VGA *~pretty picture~* loop
 ;
 ;******************************************************************************
+
 	mov	ah,0h
 	int	16h
 	cmp	al, 01Bh
@@ -69,6 +63,12 @@ crash_n:
 ;;	jl 	short crash
 ;;	ret
 
+;******************************************************************************
+;
+;	Terminates program (function 4Ch,int21h)
+;
+;******************************************************************************
+
 	
 	mov	ax,4C00h
 	int	21h
@@ -79,5 +79,4 @@ _start	ENDP
 ;;message to display to stdout
 
 ;;msg_len	equ	$-msg
-;;CODE	ends
-	end	_hello
+	end	_start
