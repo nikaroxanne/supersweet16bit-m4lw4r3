@@ -17,7 +17,7 @@
 
 	org 100h
 
-_hello	PROC	NEAR
+_start	PROC	NEAR
 	mov	ah,40h
 	mov	bx,1
 	;;stdout == 1
@@ -27,23 +27,29 @@ _hello	PROC	NEAR
 	mov	bx,0B800h
 	mov	es,ax
 	mov	di,0h
-	mov	bx,0h
+	mov	cx,0h
+	jmp	short crash
 
 crash:
 	add	di,031Dh
+	cmp	di,3E80h
+	jl	short crash_n
+	sub	di,3E80h
+
+crash_n:
 	mov	al,es:[di]
-	iadd	ax,di
-	mov	al,es:[di]
+	add	ax,di
+	mov	es:[di],al
 	inc	cx
 	cmp	cx,0255h
-	jge 	crash
+	jge 	short crash
 	ret
 
 	
 	mov	ax,4C00h
 	int	21h
 
-_hello	ENDP
+_start	ENDP
 
 a$msg	db	'Hello, MS-DOS!',0Dh,0Ah,24h
 ;;message to display to stdout
