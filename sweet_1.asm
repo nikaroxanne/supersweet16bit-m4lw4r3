@@ -1,5 +1,5 @@
-.286
-.MODEL TINY
+;.286			;masm specific
+;.MODEL TINY		;masm specific
 
 ;******************************************************************************
 ;	Hooks BIOS Interrupts to draw pretty pictureds to terminal screen
@@ -30,16 +30,16 @@
 ;
 ;******************************************************************************
 
-.CODE
+;.CODE				;masm specific
 	org 100h
 
-_start	PROC	NEAR
-
+;_start	PROC	NEAR		;masm specific
+start:				;nasm specific
 	mov	ax,0B800h
 	mov	es,ax
 	mov	di,0h
 	mov	cx,0h
-	jmp	short crash
+	;jmp	short crash
 
 sweet_init:
 	xor	di,di
@@ -53,7 +53,8 @@ sweet_n_setup:
 	
 sweet_n_right:
 	add	di,4
-	mov	cx,4Dh
+	;mov	cx,4Dh
+	mov	cx,0050h		;repeat 320 [0x140h] times[width of screen] / 4 [bytes per pixel val]
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
@@ -71,12 +72,14 @@ sweet_n_intro:
 	mov	ah,40h
 	mov	bx,1
 	mov	cx,b_len
-	mov	dx,offset b_msg
+	;mov	dx,offset b_msg			;masm specific
+	;lea	dx,b_msg			;nasm specific
 	int	21h
 	mov	ah,40h
 	mov	bx,1
 	mov	cx,c_len
-	mov	dx,offset c_msg
+	;mov	dx,offset c_msg			;masm specific
+	lea	dx, c_msg			;nasm specific
 	int	21h
 	jmp	sweet_n
 
@@ -115,8 +118,8 @@ sweet_n:
 	je	sweet_n_right
 	
 	;;check if keypress is Left arrow
-	cmp	al, 004Bh
-	je	sweet_n_right
+	;cmp	al, 004Bh
+	;je	sweet_n_left
 	
 	;;check if keypress is Down arrow
 	cmp	al, 0050h
@@ -137,15 +140,8 @@ sweet_n:
 	mov	ax,4C00h
 	int	21h
 
-_start	ENDP
-
-b_msg	db	'My Super Sweet 16-Bit Malware:',0Dh,0Ah,24h
-c_msg	db	'MS-DOS Edition',0Dh,0Ah
-;;message to display to stdout
-
-b_len	equ	$-b_msg
-c_len	equ	$-c_msg
+;_start	ENDP				;masm specific
 
 
+;	end	_start			;masm specific
 
-	end	_start
