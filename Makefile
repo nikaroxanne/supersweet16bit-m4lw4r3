@@ -9,8 +9,6 @@
 #	a file with filename following the format:
 #		dis_$(EXECUTABLE)_$(OPT_LEVEL).txt
 #		- where $(EXECUTABLE) is the base name of the executable
-#		and $(OPT_LEVEL) is the optimization level selected during 
-#		compilation
 #
 #	all  		- (default) compile all asm files in directory
 # 	clean  		- clean up compiled executable files
@@ -19,22 +17,16 @@
 #
 ###############################################################################
 
-COM_EXECUTABLES = sweet vga_tetris 
+COM_EXECUTABLES = sweet.com vga_tetris.com
 
 SOURCE_FILES = sweet.asm vga_tetris.asm
 
 
-## TODO: There is almost certainly a way to condense the next 10 lines into one (probably with globbing of some variety); to be modfiied;
-
 SRC_DIR_VGA_TETRIS = $(addprefix vga_tetris/,vga_tetris.asm)
-
 SRC_DIRS =  $(SRC_DIR_VGA_TETRIS) 
+DST_DIRS = vga_tetris/ sweet/ 
+DST_DIR_VGA_TETRIS = vga_tetris/
 
-DST_DIRS = $(DST_DIR_VGA_TETRIS)
-
-DST_DIR_VGA_TETRIS = VGA_Tetris/
-
-#EXEC_DIRS = $(DST_DIRS:.o=)
 
 NASM = nasm
 
@@ -47,11 +39,10 @@ DFLAGS= -D
 
 ###############################################################################
 #
-#	Compiling from source on ARM v7 architecture
+#	Compiling .asm files to .com executables
 #
 ###############################################################################
 
-#all: $(EXEC_DIRS)
 all: $(EXECUTABLES)
 
 
@@ -59,29 +50,23 @@ all: $(EXECUTABLES)
 
 
 clean:
-	rm -f $(SRC_DIRS) *.o 
-
-
-
-#$(NASM) $(FLAGS) -c $< -o $(addprefix $(<D)/,$(@))
-##$(NASM) $(FLAGS) -o $(addprefix $(filter $(<D), $(DST_DIRS)), $@) $< 
+	rm -f sweet.com vga_tetris.com
 
 ###############################################################################
 
 
 all:
-	$(NASM) $(FLAGS) -o $(COM_EXECUTABLES)
+	$(COM_EXECUTABLES)
 
 
-%.com: $(filter %.asm, $(SRC_DIRS))
-	$(NASM) $(FLAGS) $< -o $(addprefix $(filter $(<D), $(DST_DIRS)), $@)
+sweet.com: sweet.asm
+	$(NASM) $(FLAGS) -o $@ $^ 
 
-sweet: sweet/sweet.asm
-	$(NASM) $(FLAGS) -o $(addprefix $(<D)/, $@) $< 
+vga_tetris.com: vga_tetris.asm
+	$(NASM) $(FLAGS) -o $@ $^
 
-
-vga_tetris: vga_tetris/vga_tetris.asm
-	$(NASM) $(FLAGS) -o $(addprefix $(<D)/, $@) $< 
+#vga_tetris.com: vga_tetris/vga_tetris.asm
+#	$(NASM) $(FLAGS) -o $(addprefix $(filter $(<D), $(DST_DIRS)), $@) $^
 
 
 
