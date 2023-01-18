@@ -1,6 +1,9 @@
 ;.286			;masm specific
 ;.MODEL TINY		;masm specific
 
+CPU 286			;nasm specific
+BITS 16                 ;nasm specific
+
 ;******************************************************************************
 ;	Hooks BIOS Interrupts to draw pretty pictureds to terminal screen
 ;	Intro to COM Programs for Hushcon Seattle 2022 Presentation
@@ -10,7 +13,7 @@
 ;	COM Program that manipulates pixel values of command prompt 
 ;	by writing directly to VGA buffer
 ;	controls animation using INT 16h keypress return values
-;	Assumes 320x200 and VGA text mode
+;	Assumes 320x200 and CGA text mode
 ;		
 ;	
 ;	Funtion sweet_n_down does use an infinite loop for the animation.
@@ -31,17 +34,10 @@
 ;	Must be compiled with link16.exe (MASM32 preferably) 
 ;
 ;******************************************************************************
-SCREEN_WIDTH	EQU 0x140
-SCREEN_HEIGHT	EQU 0xC8
-LEFT_KEY	EQU 0x4B
-RIGHT_KEY	EQU 0x4D
-DOWN_KEY	EQU 0x50
-
 
 ;.CODE				;masm specific
-	org 100h
-
-
+	;org 100h		;masm specific
+ORG 0x100			;nasm specific
 
 ;_start	PROC	NEAR		;masm specific
 start:				;nasm specific
@@ -54,35 +50,43 @@ sweet_init:
 	xor	di,di
 
 sweet_n_setup:
-	;mov 	di, 07D0h
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
 	jmp 	sweet_n
 
 sweet_n_right:
-	shl	di,1
+	;add	di,4Dh
+	add	di,4Ch
+	;mov	cx,4Dh
 	;mov	cx,0140h		;repeat 320 times[width of screen]
-	mov	cx,4Ch		;repeat 320 times[width of screen]
+;	mov	cx,4Ch		;repeat 320 times[width of screen]
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
-	rep	stosw
+;	rep	stosw
+	stosw
 	jmp	sweet_n
 	
 sweet_n_left:
-	shr	di,1
+	;add	di,4Dh
+	sub	di,4Ch
+	;mov	cx,4Dh
 	;mov	cx,0140h		;repeat 320 times[width of screen]
-	mov	cx,4Ch		;repeat 320 times[width of screen]
+	;mov	cx,4Ch		;repeat 320 times[width of screen]
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
-	rep	stosw
+	stosw
 	jmp	sweet_n
 
 sweet_n_down:
-	add	di,32h
+	;add	di,160
+	;add	di,31h
+	;add	di,32h
+	add	di, 0C8h
 	mov	ax,0
+	;mov	cx,4Dh
 	mov 	cx,0
 	mov	al,es:[di]
 	add	ax,di
@@ -90,6 +94,7 @@ sweet_n_down:
 	rep	stosw
 	inc	cx
 	rep 	stosw
+	;cmp	cx,32h
 	mov	ah,1h
 	int	16h
 	jnz	sweet_n_down
@@ -102,12 +107,6 @@ sweet_n_intro:
 	;mov	dx,offset b_msg			;masm specific
 	lea	dx,b_msg			;nasm specific
 	int	21h
-	mov	ah,40h
-	mov	bx,1
-	;;mov	cx,c_len
-	;mov	dx,offset c_msg			;masm specific
-	;;lea	dx,c_msg			;nasm specific
-	;;int	21h
 	jmp	sweet_n
 
 
@@ -121,7 +120,6 @@ sweet_n_intro:
 ;******************************************************************************
 
 sweet_n:
-	;inc	di
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
@@ -142,19 +140,19 @@ sweet_n:
 	int	16h
 	
 	;;check if keypress is Right arrow
-	cmp	ah, RIGHT_KEY
+	cmp	ah, 0x4D
 	je	sweet_n_right
 	
 	;;check if keypress is Left arrow
-	cmp	ah, LEFT_KEY
+	cmp	ah, 0x4B
 	je	sweet_n_left
 	
 	;;check if keypress is Down arrow
-	cmp	ah, 50h
+	cmp	ah, 0x50
 	je	sweet_n_down
 	
 	;;check if keypress is ESC
-	cmp	al, 1Bh
+	cmp	al, 01Bh
 	;pop di
 	jnz	sweet_n_setup
 	;jnz	sweet_init
@@ -165,15 +163,13 @@ sweet_n:
 ;	Terminates program (function 4Ch,int21h)
 ;
 ;******************************************************************************
+
+	
 	mov	ax,4C00h
 	int	21h
 
 ;_start	ENDP				;masm specific
 
-b_msg	db	"tysm hushcon, see y'all next time xoxo ~*ic3qu33n*~",0Dh,0Ah 
-;;message to display to stdout
-
-b_len	equ	$-b_msg
 
 ;	end	_start			;masm specific
 
