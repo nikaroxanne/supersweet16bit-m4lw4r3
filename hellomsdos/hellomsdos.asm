@@ -3,20 +3,23 @@
 
 ;******************************************************************************
 ;	Sample COM Program that prints "Hello, MS-DOS" to stdout 
-;	To be used in DOSBOX (or similar) MS-DOS Emulator program 
-;	Must be compiled with link16.exe (MASM32 preferably) 
+;
+;	To be used in MS-DOS Emulator program 
+;		(i.e. DOSBOX, FreeDOS in qemu, etc)
+;	Must be compiled with a 16bit linker 
+;		(i.e. ld86 or link16.exe with MASM32) 
+;
+;	This TSR is for educational purposes only.
+;	Use at your own risk and practice at least some modicum of discretion
 ;
 ;******************************************************************************
 
-
 .CODE
-
 	org 100h
 
 _hello	PROC	NEAR
 	mov	ah,40h
-	mov	bx,1
-	;;stdout == 1
+	mov	bx,1 			;;stdout == 1
 	mov	dx,offset a$msg
 	int	21h
 	
@@ -27,8 +30,7 @@ _hello	PROC	NEAR
 _hello	ENDP
 
 a$msg	db	'Hello, MS-DOS!',0Dh,0Ah,24h
-;;message to display to stdout
+;;message to display to stdout	;masm-specific
 
-;;msg_len	equ	$-msg
-;;CODE	ends
-	end	_hello
+;;CODE	ends			;masm-specific
+;;	end	_hello		;masm-specific

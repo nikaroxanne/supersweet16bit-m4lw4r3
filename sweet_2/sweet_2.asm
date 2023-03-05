@@ -1,6 +1,5 @@
 ;.286			;masm specific
 ;.MODEL TINY		;masm specific
-
 ;******************************************************************************
 ;	Hooks BIOS Interrupts to draw pretty pictureds to terminal screen
 ;	Intro to COM Programs for Hushcon Seattle 2022 Presentation
@@ -12,7 +11,6 @@
 ;	controls animation using INT 16h keypress return values
 ;	Assumes 320x200 and CGA text mode
 ;		
-;	
 ;	Funtion sweet_n_down does use an infinite loop for the animation.
 ;	
 ;	Also importantly: There are NO FLASHING LIGHTS IN THIS PROGRAM.
@@ -26,10 +24,13 @@
 ;	There are also what might be considered garish color schemes
 ;	but this is my art so 
 ;
-;	
-;	To be used in DOSBOX (or similar) MS-DOS Emulator program 
-;	Must be compiled with link16.exe (MASM32 preferably) 
+;	To be used in MS-DOS Emulator program 
+;		(i.e. DOSBOX, FreeDOS in qemu, etc)
+;	Must be compiled with a 16bit linker 
+;		(i.e. ld86 or link16.exe with MASM32) 
 ;
+;	This program is for educational purposes only.
+;	Use at your own risk and practice at least some modicum of discretion
 ;******************************************************************************
 
 ;.CODE				;masm specific
@@ -41,13 +42,11 @@ start:				;nasm specific
 	mov	es,ax
 	mov	di,0h
 	mov	cx,0h
-	;jmp	short crash
 
 sweet_init:
 	xor	di,di
 
 sweet_n_setup:
-	;mov 	di, 07D0h
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
@@ -55,9 +54,6 @@ sweet_n_setup:
 
 	
 sweet_n_right:
-	;add	di,4
-	;mov	cx,4Dh
-	;mov	cx,0140h		;repeat 320 times[width of screen]
 	mov	cx,4Ch		;repeat 320 times[width of screen]
 	mov	al,es:[di]
 	add	ax,di
@@ -67,7 +63,6 @@ sweet_n_right:
 
 sweet_n_down:
 	add	di,160
-	;mov	cx,4Dh
 	mov 	cx,0
 	mov	al,es:[di]
 	add	ax,di
@@ -93,23 +88,16 @@ sweet_n_intro:
 	int	21h
 	jmp	sweet_n
 
-
-
-
-
 ;******************************************************************************
 ;
 ;;copies new pixel values to VGA buffer 
 ;
 ;******************************************************************************
-
 sweet_n:
-	;inc	di
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
 	stosw
-
 	
 ;******************************************************************************
 ;
@@ -119,8 +107,6 @@ sweet_n:
 ;	Else, continue VGA *~pretty picture~* loop
 ;
 ;******************************************************************************
-
-	;push	di
 	mov	ah,0h
 	int	16h
 	
@@ -138,32 +124,23 @@ sweet_n:
 	
 	;;check if keypress is ESC
 	cmp	al, 01Bh
-	;pop di
 	jnz	sweet_n_setup
-	;jnz	sweet_init
-	
 
 ;******************************************************************************
 ;
 ;	Terminates program (function 4Ch,int21h)
 ;
 ;******************************************************************************
-
-	
 	mov	ax,4C00h
 	int	21h
 
-;_start	ENDP				;masm specific
-
-;b_msg	db	'My Super Sweet 16-Bit Malware:',0Dh,0Ah,24h
+;;messages to display to stdout
 b_msg	db	'My Super Sweet 16-Bit Malware:',0Dh,0Ah,1FH
 c_msg	db	'MS-DOS Edition',0Dh,0Ah,0Eh
-;;message to display to stdout
 
-b_len	equ	569XZilmsb_msg
-c_len	equ	569XZilmsc_msg
+b_len	equ	$-b_msg
+c_len	equ	$-c_msg
 
-
-
+;_start	ENDP				;masm specific
 ;	end	_start			;masm specific
 

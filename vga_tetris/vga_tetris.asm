@@ -11,9 +11,8 @@
 ;	by writing directly to VGA buffer
 ;	controls animation using INT 16h keypress return values
 ;	Assumes 320x200 and VGA text mode
-;		
 ;	
-;	Funtion sweet_n_down does use an infinite loop for the animation.
+;	Funtion vga-tetris_n_down does use an infinite loop for the animation.
 ;	
 ;	Also importantly: There are NO FLASHING LIGHTS IN THIS PROGRAM.
 ;
@@ -26,10 +25,13 @@
 ;	There are also what might be considered garish color schemes
 ;	but this is my art so 
 ;
-;	
-;	To be used in DOSBOX (or similar) MS-DOS Emulator program 
-;	Must be compiled with link16.exe (MASM32 preferably) 
+;	To be used in MS-DOS Emulator program 
+;		(i.e. DOSBOX, FreeDOS in qemu, etc)
+;	Must be compiled with a 16bit linker 
+;		(i.e. ld86 or link16.exe with MASM32) 
 ;
+;	This program is for educational purposes only.
+;	Use at your own risk and practice at least some modicum of discretion
 ;******************************************************************************
 SCREEN_WIDTH	EQU 0x140
 SCREEN_HEIGHT	EQU 0xC8
@@ -41,8 +43,6 @@ DOWN_KEY	EQU 0x50
 ;.CODE				;masm specific
 	org 100h
 
-
-
 ;_start	PROC	NEAR		;masm specific
 start:				;nasm specific
 	mov	ax,0B800h
@@ -50,37 +50,34 @@ start:				;nasm specific
 	mov	di,0h
 	mov	cx,0h
 
-sweet_init:
+vga-tetris_init:
 	xor	di,di
 
-sweet_n_setup:
-	;mov 	di, 07D0h
+vga-tetris_n_setup:
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
-	jmp 	sweet_n
+	jmp 	vga-tetris_n
 
-sweet_n_right:
+vga-tetris_n_right:
 	shl	di,1
-	;mov	cx,0140h		;repeat 320 times[width of screen]
 	mov	cx,4Ch		;repeat 320 times[width of screen]
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
 	rep	stosw
-	jmp	sweet_n
+	jmp	vga-tetris_n
 	
-sweet_n_left:
+vga-tetris_n_left:
 	shr	di,1
-	;mov	cx,0140h		;repeat 320 times[width of screen]
 	mov	cx,4Ch		;repeat 320 times[width of screen]
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
 	rep	stosw
-	jmp	sweet_n
+	jmp	vga-tetris_n
 
-sweet_n_down:
+vga-tetris_n_down:
 	add	di,32h
 	mov	ax,0
 	mov 	cx,0
@@ -92,10 +89,10 @@ sweet_n_down:
 	rep 	stosw
 	mov	ah,1h
 	int	16h
-	jnz	sweet_n_down
-	jmp	sweet_n
+	jnz	vga-tetris_n_down
+	jmp	vga-tetris_n
 
-sweet_n_intro:
+vga-tetris_n_intro:
 	mov	ah,40h
 	mov	bx,1
 	mov	cx,b_len
@@ -104,29 +101,18 @@ sweet_n_intro:
 	int	21h
 	mov	ah,40h
 	mov	bx,1
-	;;mov	cx,c_len
-	;mov	dx,offset c_msg			;masm specific
-	;;lea	dx,c_msg			;nasm specific
-	;;int	21h
-	jmp	sweet_n
-
-
-
-
+	jmp	vga-tetris_n
 
 ;******************************************************************************
 ;
 ;;copies new pixel values to VGA buffer 
 ;
 ;******************************************************************************
-
-sweet_n:
-	;inc	di
+vga-tetris_n:
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
 	stosw
-
 	
 ;******************************************************************************
 ;
@@ -136,29 +122,24 @@ sweet_n:
 ;	Else, continue VGA *~pretty picture~* loop
 ;
 ;******************************************************************************
-
-	;push	di
 	mov	ah,0h
 	int	16h
 	
 	;;check if keypress is Right arrow
 	cmp	ah, RIGHT_KEY
-	je	sweet_n_right
+	je	vga-tetris_n_right
 	
 	;;check if keypress is Left arrow
 	cmp	ah, LEFT_KEY
-	je	sweet_n_left
+	je	vga-tetris_n_left
 	
 	;;check if keypress is Down arrow
 	cmp	ah, 50h
-	je	sweet_n_down
+	je	vga-tetris_n_down
 	
 	;;check if keypress is ESC
 	cmp	al, 1Bh
-	;pop di
-	jnz	sweet_n_setup
-	;jnz	sweet_init
-	
+	jnz	vga-tetris_n_setup
 
 ;******************************************************************************
 ;
@@ -168,12 +149,10 @@ sweet_n:
 	mov	ax,4C00h
 	int	21h
 
-;_start	ENDP				;masm specific
-
-b_msg	db	"tysm hushcon, see y'all next time xoxo ~*ic3qu33n*~",0Dh,0Ah 
 ;;message to display to stdout
-
+b_msg	db	"I <3 VGA graphics", 0Dh, 0Ah
 b_len	equ	$-b_msg
 
+;_start	ENDP				;masm specific
 ;	end	_start			;masm specific
 

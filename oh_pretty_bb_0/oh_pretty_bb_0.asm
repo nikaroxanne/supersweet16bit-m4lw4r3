@@ -26,6 +26,13 @@
 ;	To be used in DOSBOX (or similar) MS-DOS Emulator program 
 ;	Must be compiled with link16.exe (MASM32 preferably) 
 ;
+;	To be used in MS-DOS Emulator program 
+;		(i.e. DOSBOX, FreeDOS in qemu, etc)
+;	Must be compiled with a 16bit linker 
+;		(i.e. ld86 or link16.exe with MASM32) 
+;
+;	This program is for educational purposes only.
+;	Use at your own risk and practice at least some modicum of discretion
 ;******************************************************************************
 
 .CODE

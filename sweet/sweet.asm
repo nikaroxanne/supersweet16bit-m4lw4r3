@@ -2,7 +2,7 @@
 ;.MODEL TINY		;masm specific
 
 CPU 286			;nasm specific
-BITS 16			;nasm specific
+BITS 16                 ;nasm specific
 ;******************************************************************************
 ;	Hooks BIOS Interrupts to draw pretty pictureds to terminal screen
 ;	Intro to COM Programs for Hushcon Seattle 2022 Presentation
@@ -13,7 +13,7 @@ BITS 16			;nasm specific
 ;	by writing directly to VGA buffer
 ;	controls animation using INT 16h keypress return values
 ;	Assumes 320x200 and CGA text mode
-;		
+;	
 ;	Also importantly: There are NO FLASHING LIGHTS IN THIS PROGRAM.
 ;
 ;	Same note as previous:
@@ -50,25 +50,37 @@ sweet_n_setup:
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
-	jmp	sweet_n
+	jmp 	sweet_n
 
-	
 sweet_n_right:
-	add	di,4
-	mov	cx,0050h		;repeat 320 [0x140h] times[width of screen] / 4 [bytes per pixel val]
+	add	di,4Ch
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
-	rep	stosw
+	stosw
+	jmp	sweet_n
+	
+sweet_n_left:
+	sub	di,4Ch
+	mov	al,es:[di]
+	add	ax,di
+	mov	es:[di],al
+	stosw
 	jmp	sweet_n
 
 sweet_n_down:
-	add	di,160
-	mov	cx,4Dh
+	add	di, 0C8h
+	mov	ax,0
+	mov 	cx,0
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
 	rep	stosw
+	inc	cx
+	rep 	stosw
+	mov	ah,1h
+	int	16h
+	jnz	sweet_n_down
 	jmp	sweet_n
 
 sweet_n_intro:
@@ -76,16 +88,11 @@ sweet_n_intro:
 	mov	bx,1
 	mov	cx,b_len
 	;mov	dx,offset b_msg			;masm specific
-	;lea	dx,b_msg			;nasm specific
+	lea	dx,b_msg			;nasm specific
 	int	21h
 	mov	ah,40h
 	mov	bx,1
-	mov	cx,c_len
-	;mov	dx,offset c_msg			;masm specific
-	lea	dx, c_msg			;nasm specific
-	int	21h
 	jmp	sweet_n
-
 
 ;******************************************************************************
 ;
@@ -93,7 +100,6 @@ sweet_n_intro:
 ;
 ;******************************************************************************
 sweet_n:
-	inc	di
 	mov	al,es:[di]
 	add	ax,di
 	mov	es:[di],al
@@ -111,21 +117,20 @@ sweet_n:
 	int	16h
 	
 	;;check if keypress is Right arrow
-	cmp	al, 004Dh
+	cmp	ah, 0x4D
 	je	sweet_n_right
 	
 	;;check if keypress is Left arrow
-	;cmp	al, 004Bh
-	;je	sweet_n_left
+	cmp	ah, 0x4B
+	je	sweet_n_left
 	
 	;;check if keypress is Down arrow
-	cmp	al, 0050h
-	je	sweet_n_intro
+	cmp	ah, 0x50
+	je	sweet_n_down
 	
 	;;check if keypress is ESC
 	cmp	al, 01Bh
 	jnz	sweet_n_setup
-	
 
 ;******************************************************************************
 ;
@@ -134,6 +139,13 @@ sweet_n:
 ;******************************************************************************
 	mov	ax,4C00h
 	int	21h
+
+;;messages to display to stdout
+b_msg	db	'My Super Sweet 16-Bit Malware:',0Dh,0Ah,1FH
+c_msg	db	'MS-DOS Edition',0Dh,0Ah,0Eh
+
+b_len	equ	$-b_msg
+c_len	equ	$-c_msg
 
 ;_start	ENDP				;masm specific
 ;	end	_start			;masm specific
