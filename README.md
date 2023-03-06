@@ -69,5 +69,6 @@
     be gleaned from studying the techniques of the malware masters of the ‘80s/‘90s, 
      -tracing the evolution of techniques developed in MS-DOS malware to malware of today 
        and potential related vectors for leveraging these techniques on a variety of systems 
-    (i.e. modern Windows — including UEFI firmware implants, embedded/IoT systems, 
+    (i.e. modern Windows — including UEFI bootkits+firmware implants, embedded/IoT systems,
+	etc.)
     
