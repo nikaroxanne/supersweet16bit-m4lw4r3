@@ -16,19 +16,17 @@ bits 16
 
 ;******************************************************************************
 
-SCREEN_MAX			equ	320*200
-SCREEN_WIDTH		equ	0x140							;;320
-SCREEN_HEIGHT		equ	0xC8							;;200
-SCALED_SCREEN_MAX	equ	0x280*SCALE_MULTIPLIER
-SCALED_SCREEN_W		equ	0x20*SCALE_MULTIPLIER			;;320 / 10
-SCALED_SCREEN_H		equ	0x14*SCALE_MULTIPLIER			;;200 / 10 
-MBRSPRITE_W			equ	0x100							;;256
-MBRSPRITE_AREA		equ	0x7D00							;;320 / * MBRSPRITE_W
-NEWSPRITE_AREA		equ	0x2800*SCALE_MULTIPLIER			;;320 / * MBRSPRITE_W
-VGA_PAL_INDEX		equ	0x3C8
-VGA_PAL_DATA		equ	0x3C9
-MBR_SIZE			equ 0x200
-SCALE_MULTIPLIER	equ 2
+SCREEN_MAX	equ	320*200
+SCALED_SCREEN_MAX	equ	0x280
+SCREEN_WIDTH	equ	0x140		;;320
+SCALED_SCREEN_W	equ	0x20		;;320 / 10
+MBRSPRITE_W		equ	0x100		;;320 / 10
+SCREEN_HEIGHT	equ	0xC8		;;200
+SCALED_SCREEN_H	equ	0x14		;;200 / 10 
+VGA_PAL_INDEX	equ	0x3C8
+VGA_PAL_DATA	equ	0x3C9
+MBR_SIZE		equ 0x200
+SCALE_MULTIPLIER equ 8
 ;******************************************************************************
 ;_start	PROC	NEAR ; masm
 
@@ -38,6 +36,7 @@ copy_mbr:
 	mov dx, 0x80 	;from Side 0, drive C:
 	lea bx, BUF		;to buffer BUF in DS
 	int 13h
+
 
 ;******************************************************************************
 ;	Write back to hard disk drive C: sector 1 (MBR)
@@ -55,7 +54,7 @@ vga_init:
 	mov	ax, 0x13
 	int	10h
 	cld
-;	jmp paint_setup
+	jmp paint_setup
 ;	jmp bmp_setup
 
 ;******************************************************************************
@@ -69,7 +68,7 @@ set_pal:
 	out	dx, al
 	inc	dx
 	pal_1:
-		or	ax,1111111100110011b
+		or	ax,0011111100110011b
 		push	ax
 		shr	ax, 10
 		out	dx,al
@@ -82,39 +81,37 @@ set_pal:
 		jnz	pal_1
 	;jmp 	bmp_setup
 paint_setup:
-	mov	cx, SCALED_SCREEN_W
+	;mov	cx, SCALED_SCREEN_W
+	mov	cx, SCREEN_HEIGHT*SCALE_MULTIPLIER
 	xor di, di
 	paint_loop:
 		push 	di
 		push	cx
 		mbr_paint:
-			;lea si, Bitmaptest
-			lea si, SkullBitmap
 			;lea si, BUF
+			lea si, SkullBitmap
 			push si
 			mov bx, MBR_SIZE
-			;mov bx, SCALED_SCREEN_MAX
 			vga_mbr_y:
 				push di
 				mov dx, SCALED_SCREEN_W
 				vga_mbr_x:
 					mov ax, ds:[si]
 					or al, es:[di]
-					add al, 0xAA
+					add al, 0x1
 					mov es:[di], al 
 					inc si
 					inc di
 					dec dx
 					jnz vga_mbr_x
 				pop di
-				add di, 320
+				add di, 320*SCALE_MULTIPLIER
 				dec bx
 				jnz vga_mbr_y
 			pop si
 		pop		cx
 		pop 	di
-		add		di, MBRSPRITE_AREA
-		;add		di, NEWSPRITE_AREA
+		add		di, MBRSPRITE_W
 		dec 	cx
 		jnz	paint_loop
 	jmp key_check
@@ -151,6 +148,8 @@ paint_setup:
 
 
 ;bmp_setup:
+;;	xor ax, ax
+;;	mov	ds,ax
 ;	lea si, Bitmaptest
 ;	;mov bx, SCREEN_HEIGHT
 ;	mov bx, SCALED_SCREEN_MAX
@@ -214,8 +213,10 @@ baibai:
 	mov	ax,4C00h		;terminate program
 	int	21h
 
+
 BUF:
 	times 512-($-$$) db 0
+
 
 SkullBitmap:
 db 0x85,0x7e,0x7b,0x7b,0x79,0x76,0x73,0x71,0x6d,0x6a,0x69,0x66,0x64,0x63,0x61,0x5f,0x5d,0x5c,0x5b,0x5a,0x5a,0x59,0x57,0x56,0x55,0x55,0x54,0x54,0x55,0x55,0x54,0x55

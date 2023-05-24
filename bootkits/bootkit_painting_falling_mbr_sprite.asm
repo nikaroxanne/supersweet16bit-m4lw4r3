@@ -55,6 +55,11 @@ vga_init:
 	cld
 ;	jmp bmp_setup
 
+;******************************************************************************
+;	Palette routine adapted from "Symetrie" and "Atraktor" by Rrrola
+;	 https://abaddon.hu/256b/colors.html 
+;
+;******************************************************************************
 set_pal:
 	salc				;set carry flag in al, if carry flag set, al=0
 	mov	dx,VGA_PAL_INDEX	;

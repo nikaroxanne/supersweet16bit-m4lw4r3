@@ -16,19 +16,17 @@ bits 16
 
 ;******************************************************************************
 
-SCREEN_MAX			equ	320*200
-SCREEN_WIDTH		equ	0x140							;;320
-SCREEN_HEIGHT		equ	0xC8							;;200
-SCALED_SCREEN_MAX	equ	0x280*SCALE_MULTIPLIER
-SCALED_SCREEN_W		equ	0x20*SCALE_MULTIPLIER			;;320 / 10
-SCALED_SCREEN_H		equ	0x14*SCALE_MULTIPLIER			;;200 / 10 
-MBRSPRITE_W			equ	0x100							;;256
-MBRSPRITE_AREA		equ	0x7D00							;;320 / * MBRSPRITE_W
-NEWSPRITE_AREA		equ	0x2800*SCALE_MULTIPLIER			;;320 / * MBRSPRITE_W
-VGA_PAL_INDEX		equ	0x3C8
-VGA_PAL_DATA		equ	0x3C9
-MBR_SIZE			equ 0x200
-SCALE_MULTIPLIER	equ 2
+SCREEN_MAX	equ	320*200
+SCALED_SCREEN_MAX	equ	0x280
+SCREEN_WIDTH	equ	0x140		;;320
+SCALED_SCREEN_W	equ	0x20		;;320 / 10
+MBRSPRITE_W		equ	0x100		;;320 / 10
+SCREEN_HEIGHT	equ	0xC8		;;200
+SCALED_SCREEN_H	equ	0x14		;;200 / 10 
+VGA_PAL_INDEX	equ	0x3C8
+VGA_PAL_DATA	equ	0x3C9
+MBR_SIZE		equ 0x200
+SCALE_MULTIPLIER equ 8
 ;******************************************************************************
 ;_start	PROC	NEAR ; masm
 
@@ -38,6 +36,7 @@ copy_mbr:
 	mov dx, 0x80 	;from Side 0, drive C:
 	lea bx, BUF		;to buffer BUF in DS
 	int 13h
+
 
 ;******************************************************************************
 ;	Write back to hard disk drive C: sector 1 (MBR)
@@ -56,20 +55,14 @@ vga_init:
 	int	10h
 	cld
 ;	jmp paint_setup
-;	jmp bmp_setup
 
-;******************************************************************************
-;	Palette routine adapted from "Symetrie" and "Atraktor" by Rrrola
-;	 https://abaddon.hu/256b/colors.html 
-;
-;******************************************************************************
 set_pal:
 	salc				;set carry flag in al, if carry flag set, al=0
 	mov	dx,VGA_PAL_INDEX	;
 	out	dx, al
 	inc	dx
 	pal_1:
-		or	ax,1111111100110011b
+		or	ax,0011111111110011b
 		push	ax
 		shr	ax, 10
 		out	dx,al
@@ -80,68 +73,46 @@ set_pal:
 		out	dx,al
 		inc	ax
 		jnz	pal_1
-	;jmp 	bmp_setup
+
 paint_setup:
-	mov	cx, SCALED_SCREEN_W
+	;mov	cx, SCALED_SCREEN_W
+	mov	cx, SCREEN_HEIGHT
+	shl cx, 1
 	xor di, di
 	paint_loop:
 		push 	di
 		push	cx
 		mbr_paint:
-			;lea si, Bitmaptest
-			lea si, SkullBitmap
 			;lea si, BUF
+			lea si, SkullBitmap
 			push si
 			mov bx, MBR_SIZE
-			;mov bx, SCALED_SCREEN_MAX
 			vga_mbr_y:
 				push di
 				mov dx, SCALED_SCREEN_W
 				vga_mbr_x:
 					mov ax, ds:[si]
 					or al, es:[di]
-					add al, 0xAA
+					add al, 0x1
 					mov es:[di], al 
+					mov es:[di+2], al 
 					inc si
 					inc di
+					add di,4
 					dec dx
 					jnz vga_mbr_x
 				pop di
-				add di, 320
+				add di, 320*SCALE_MULTIPLIER
 				dec bx
 				jnz vga_mbr_y
 			pop si
 		pop		cx
 		pop 	di
-		add		di, MBRSPRITE_AREA
-		;add		di, NEWSPRITE_AREA
+		add		di, MBRSPRITE_W
 		dec 	cx
 		jnz	paint_loop
 	jmp key_check
-	;jmp 	mbr_paint
 
-
-;mbr_paint:
-;	push es
-;	push ds
-;	lea si, BUF
-;	mov bx, MBR_SIZE
-;	vga_mbr_y:
-;		push di
-;		mov dx, SCALED_SCREEN_W
-;		vga_mbr_x:
-;			movsb
-;			dec dx
-;			jnz vga_mbr_x
-;		pop di
-;		add di, 320
-;		dec bx
-;		jnz vga_mbr_y
-;	pop ds
-;	pop es
-;	mov ax, es:[di]
-;	ret
-	;jmp key_check
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;******************************************************************************
 ;Reads bitmap row,
@@ -149,44 +120,6 @@ paint_setup:
 ;
 ;******************************************************************************
 
-
-;bmp_setup:
-;	lea si, Bitmaptest
-;	;mov bx, SCREEN_HEIGHT
-;	mov bx, SCALED_SCREEN_MAX
-;	;mov bx, SCREEN_HEIGHT*SCREEN_WIDTH
-;;vga_y_block:
-;;	push si
-;	vga_main_y:
-;		push di
-;		;mov	cx, SCREEN_WIDTH
-;		;mov dh, 0xA
-;		mov	cx, SCALED_SCREEN_W
-;		vga_main_x:
-;			mov dx, 0xA
-;			pixgroup:
-;				push si
-;				movsb
-;				;jmp write_pix
-;				pop si
-;				dec dx
-;				;cmp dl,0
-;				jnz pixgroup
-;;			inc si
-;			dec cx
-;			jnz vga_main_x
-;		pop di
-;		;mov ax, es:[di]
-;		add di, 320
-;		;mov [si], ax
-;		dec bx
-;		jnz	vga_main_y
-;	jmp key_check
-;	pop si
-;	add si, 32
-;	sub bx, 0xA
-;	cmp bx, 0
-;	jnz vga_y_block
 ;******************************************************************************
 ;
 ;	Reads char from buffer (function 0h,int16h)
@@ -198,7 +131,7 @@ paint_setup:
 key_check:
 	xor	ax,ax
 	int	16h
-	;;check if keypress is ESC
+	;;check if keypress
 	;cmp	al, 1Bh
 	cmp	al, 1
 	jnz	baibai
@@ -214,8 +147,10 @@ baibai:
 	mov	ax,4C00h		;terminate program
 	int	21h
 
+
 BUF:
 	times 512-($-$$) db 0
+
 
 SkullBitmap:
 db 0x85,0x7e,0x7b,0x7b,0x79,0x76,0x73,0x71,0x6d,0x6a,0x69,0x66,0x64,0x63,0x61,0x5f,0x5d,0x5c,0x5b,0x5a,0x5a,0x59,0x57,0x56,0x55,0x55,0x54,0x54,0x55,0x55,0x54,0x55
@@ -238,4 +173,3 @@ db 0x2f,0x2c,0x2d,0x2d,0x28,0x27,0x24,0x22,0x21,0x21,0x21,0x1f,0x1d,0x1d,0x2a,0x
 db 0x18,0x19,0x18,0x17,0x19,0x26,0x19,0x1a,0x1c,0x1d,0x1e,0x1f,0x1f,0x1f,0x25,0x39,0x4a,0x32,0x25,0x26,0x28,0x2a,0x2e,0x2e,0x31,0x34,0x37,0x3a,0x3d,0x42,0x48,0x4d
 db 0x27,0x25,0x26,0x26,0x22,0x20,0x1e,0x1d,0x1b,0x1b,0x1b,0x1a,0x18,0x2b,0x30,0x19,0x23,0x81,0x6e,0x2e,0x1d,0x16,0x13,0x14,0x13,0x12,0x11,0x12,0x12,0x12,0x12,0x14
 db 0x13,0x12,0x13,0x13,0x13,0x20,0x16,0x15,0x15,0x17,0x1a,0x27,0x3b,0x40,0x43,0x40,0x21,0x1d,0x1e,0x1f,0x22,0x24,0x26,0x28,0x2a,0x2c,0x2f,0x33,0x36,0x3a,0x3f,0x45
-

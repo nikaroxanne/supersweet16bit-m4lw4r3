@@ -55,7 +55,7 @@ vga_init:
 	mov	ax, 0x13
 	int	10h
 	cld
-;	jmp paint_setup
+	jmp paint_setup
 ;	jmp bmp_setup
 
 ;******************************************************************************
@@ -69,7 +69,7 @@ set_pal:
 	out	dx, al
 	inc	dx
 	pal_1:
-		or	ax,1111111100110011b
+		or	ax,0000111100110011b
 		push	ax
 		shr	ax, 10
 		out	dx,al
@@ -92,18 +92,19 @@ paint_setup:
 			lea si, SkullBitmap
 			;lea si, BUF
 			push si
-			mov bx, MBR_SIZE
-			;mov bx, SCALED_SCREEN_MAX
+			;mov bx, MBR_SIZE
+			mov bx, SCALED_SCREEN_MAX
 			vga_mbr_y:
 				push di
 				mov dx, SCALED_SCREEN_W
 				vga_mbr_x:
 					mov ax, ds:[si]
 					or al, es:[di]
-					add al, 0xAA
+					add al, 0x01
 					mov es:[di], al 
+					mov es:[di+2], al 
 					inc si
-					inc di
+					add di, 4
 					dec dx
 					jnz vga_mbr_x
 				pop di
